@@ -27,6 +27,7 @@ class ComplaintHandlerUI(tk.Tk):
 
         self.geometry("400x460")
         self.title("CATSWeb Automation Tool")
+        self.iconbitmap('Jnj32.ico')
         self.configure(background="#FFFFFF")
 
         container = Frame(self)
@@ -257,7 +258,7 @@ class PageOne(tk.Frame):
         self.delButton.config(relief='flat', bg='#737370', fg="#FFFFFF", height=1, width=8)
         self.delButton['font'] = helv36
 
-        self.previewButton = tk.Button(self, text="Preview", command=lambda: self.viewPreview(self.CFnum.get(), self.treeSelection, self.main_url))
+        self.previewButton = tk.Button(self, text="View", command=lambda: self.viewPreview(self.CFnum.get(), self.treeSelection, self.main_url))
         self.previewButton.config(relief='flat', bg='#737370', fg="#FFFFFF", height=1, width=8)
         self.previewButton['font'] = helv36
 
@@ -269,8 +270,8 @@ class PageOne(tk.Frame):
         self.previewButton.place(x='300', y='20')
         #self.msg.place(x='18', y='40')
         self.button1.place(x='200', y='80', anchor='center')
-        self.delButton.place(x='315', y='110')
         self.tree.place(x='0', y='140')
+        self.delButton.place(x='4', y='382')
         self.button2.place(x='315', y='385')
         #self.internet.place(x='270', y='420')
         self.authorName.place(x='87', y='442')
@@ -301,11 +302,20 @@ class PageOne(tk.Frame):
             return
 
     def workerThread2(self,CFnum, main_url):
-        previewFlag, previewMsg = complaint_handler.preview(CFnum, main_url)
-        if not previewFlag:
+        sessionFlag, previewFlag, previewMsg = complaint_handler.preview(CFnum, main_url)
+
+        if not sessionFlag:
+            messagebox.showinfo('Error!', 'Session Expired. Please login again')
+            self.logout()
+
+        elif not previewFlag:
             messagebox.showinfo('Error!', previewMsg)
 
+
     def delete(self, treeSelection):
+        if 'Ongoing' in self.treeview.item(treeSelection)["tags"]:
+            messagebox.showinfo('Error!', 'Complaint folder already in process')
+            return
         self.treeview.delete(treeSelection)
         self.treeSelection = ''
 
@@ -488,14 +498,14 @@ class ThreadedTask(threading.Thread):
         self.flagQueue = flagQueue
         self.controller = controller
         self.login_page = self.controller.get_page(LoginPage)
+        self.page_one = self.controller.get_page(PageOne)
 
     def run(self):
         sessionFlag, CF_number, statusMsg, statusFlag = complaint_handler.complaintProcess(self.CFnum, self.main_url)
 
         if not sessionFlag:
             messagebox.showinfo('Error!', 'Session Expired. Please login again')
-            self.login_page.btn.config(state = 'normal')
-            self.controller.show_frame(LoginPage)
+            self.page_one.logout()
 
         else:
             print(statusMsg)
