@@ -9,7 +9,7 @@ from tkinter import messagebox
 from tkinter import font
 import queue as Queue
 import threading
-import login
+import complaint_handler
 from selenium import webdriver
 import urllib
 from urllib.request import urlopen
@@ -141,14 +141,13 @@ class LoginPage(tk.Frame):
 
 
     def clicked(self, ID, password):
-        '''
         if ID == 'Employee ID' or len(ID) == 0:
             messagebox.showinfo('Error!', 'Enter Employee ID')
             return
         if password == 'Password' or len(password) == 0:
             messagebox.showinfo('Error!', 'Enter Password')
             return
-        '''
+        
         self.running = 1
         self.message.config(text='')
         self.UserEntry.unbind('<Return>')
@@ -164,7 +163,7 @@ class LoginPage(tk.Frame):
     def workerThread1(self, ID, password):
         while self.running:
             self.btn.config(state = 'disabled')
-            loginMsg, url, flag = login.Login(ID, password)
+            loginMsg, url, flag = complaint_handler.Login(ID, password)
 
             if flag:
                 self.message.config(text='Please enter your login information:', font = ('Helvetica','11'), foreground="#638213", background="#FFFFFF")
@@ -200,6 +199,7 @@ class PageOne(tk.Frame):
         self.running = 1
         self.t1 = time.time()
         self.main_url = ''
+        self.treeSelection = ''
         self.queue = controller.queue
         self.infoQueue = Queue.Queue()
         self.CFnumQueue = Queue.Queue()
@@ -245,7 +245,7 @@ class PageOne(tk.Frame):
         self.tree.column('#2', stretch=tk.YES, width=250, anchor='w')
     
         self.treeview = self.tree
-        self.treeview.bind("<Button-1>",lambda event :self.tree_select_event(event))
+        self.treeview.bind("<ButtonRelease-1>",lambda event :self.tree_select_event(event))
 
         self.vsb = tk.Scrollbar(self, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=self.vsb.set)
@@ -253,11 +253,11 @@ class PageOne(tk.Frame):
         self.internet = Label(self, text="Checking...")
         self.internet.config(font = ('Helvetica','11'), foreground="black", background="#FFFFFF")
 
-        self.delButton = tk.Button(self, text="Delete", command=lambda: self.delete())
+        self.delButton = tk.Button(self, text="Delete", command=lambda: self.delete(self.treeSelection))
         self.delButton.config(relief='flat', bg='#737370', fg="#FFFFFF", height=1, width=8)
         self.delButton['font'] = helv36
 
-        self.previewButton = tk.Button(self, text="Preview", command=lambda: self.viewPreview(self.CFnum.get(), self.main_url))
+        self.previewButton = tk.Button(self, text="Preview", command=lambda: self.viewPreview(self.CFnum.get(), self.treeSelection, self.main_url))
         self.previewButton.config(relief='flat', bg='#737370', fg="#FFFFFF", height=1, width=8)
         self.previewButton['font'] = helv36
 
@@ -267,9 +267,9 @@ class PageOne(tk.Frame):
         self.CF_number.place(x='35', y='20')
         self.CFnum.place(x='157', y='20')
         self.previewButton.place(x='300', y='20')
-        self.msg.place(x='18', y='40')
+        #self.msg.place(x='18', y='40')
         self.button1.place(x='200', y='80', anchor='center')
-        #self.delButton.place(x='315', y='110')
+        self.delButton.place(x='315', y='110')
         self.tree.place(x='0', y='140')
         self.button2.place(x='315', y='385')
         #self.internet.place(x='270', y='420')
@@ -283,31 +283,31 @@ class PageOne(tk.Frame):
         '''
 
     def tree_select_event(self, event):
-        item_iid = self.tree.selection()[0]
-        parent_iid = self.tree.parent(item_iid)
+        item_iid = self.tree.selection()
+        if item_iid:
+            self.treeSelection = item_iid[0]
 
-        if parent_iid:
-            print(self.tree.item(parent_iid)['values'][0])
-        else:
-            print(self.tree.item(item_iid)['values'][0])
-
-    def viewPreview(self, CFnum, main_url):
-        if len(CFnum) == 0:
+    def viewPreview(self, CFnum, treeSelection, main_url):
+        if CFnum:
+            self.thread1 = threading.Thread(target=self.workerThread2, args=(CFnum, main_url))
+            self.thread1.daemon = True #This line tells the thread to quit if the GUI (master thread) quits
+            self.thread1.start()
+        elif treeSelection:
+            self.thread1 = threading.Thread(target=self.workerThread2, args=(treeSelection, main_url))
+            self.thread1.daemon = True #This line tells the thread to quit if the GUI (master thread) quits
+            self.thread1.start()
+        elif len(CFnum) == 0:
             messagebox.showinfo('Error!', 'Enter a complaint folder number')
             return
 
-        self.thread1 = threading.Thread(target=self.workerThread2, args=(CFnum, main_url))
-        self.thread1.daemon = True #This line tells the thread to quit if the GUI (master thread) quits
-        self.thread1.start()
-
     def workerThread2(self,CFnum, main_url):
-        previewFlag, previewMsg = login.preview(CFnum, main_url)
+        previewFlag, previewMsg = complaint_handler.preview(CFnum, main_url)
         if not previewFlag:
             messagebox.showinfo('Error!', previewMsg)
 
-    def delete(self):
-        self.selected_item = self.treeview.selection()[0] ## get selected item
-        self.treeview.delete(selected_item)
+    def delete(self, treeSelection):
+        self.treeview.delete(treeSelection)
+        self.treeSelection = ''
 
     def validate(self, possible_new_value):
         if re.match(r'^[0-9]*$', possible_new_value):
@@ -490,7 +490,7 @@ class ThreadedTask(threading.Thread):
         self.login_page = self.controller.get_page(LoginPage)
 
     def run(self):
-        sessionFlag, CF_number, statusMsg, statusFlag = login.complaintProcess(self.CFnum, self.main_url)
+        sessionFlag, CF_number, statusMsg, statusFlag = complaint_handler.complaintProcess(self.CFnum, self.main_url)
 
         if not sessionFlag:
             messagebox.showinfo('Error!', 'Session Expired. Please login again')
