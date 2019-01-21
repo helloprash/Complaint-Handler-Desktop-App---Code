@@ -168,7 +168,7 @@ def preview(CFnum, main_url):
         sessionFlag, returnMsg = checkSession(browser.page_source)
         if not sessionFlag:
             if returnMsg == 'Your CATSWeb V7 session does not exist.  Please enter your login information:':
-                return False, 'Your CATSWeb V7 session expired!'
+                return sessionFlag, False, 'Your CATSWeb V7 session expired!'
        
         print(browser.current_url)
 
@@ -177,11 +177,11 @@ def preview(CFnum, main_url):
             browser.find_element_by_xpath('//*[@id="TDDisplayPart004"]/font/a/font').click() #Load Complaint Owner Home page
 
         browser = actionSubmit(browser,CFnum)
-        return True, 'None'
+        return sessionFlag,True, 'None'
 
     except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError):
         print('Read Timeout Error')
-        return False, 'Read Timeout Error!'
+        return sessionFlag, False, 'Read Timeout Error!'
 
 def complaintProcess(CFnum, url):
     print('inside complaintProcess', url)
