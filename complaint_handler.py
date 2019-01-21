@@ -204,12 +204,10 @@ def complaintProcess(CFnum, url):
 
         browser.get(url)
 
-        CFurl = browser.current_url
-
         sessionFlag, returnMsg = checkSession(browser.page_source)
         if not sessionFlag:
             if returnMsg == 'Your CATSWeb V7 session does not exist.  Please enter your login information:':
-                return False, CFnum, 'session expired!', False, CFurl
+                return False, CFnum, 'session expired!', False
        
         print(browser.current_url)
 
@@ -218,22 +216,21 @@ def complaintProcess(CFnum, url):
             browser.find_element_by_xpath('//*[@id="TDDisplayPart004"]/font/a/font').click()
 
         browser = actionSubmit(browser,CFnum)
-        CFurl = browser.current_url
         
         (flag, username,RDPC,current_step,productType,productFormula,serialNum,IR,IRstep,IRnum) = getCFDetails(browser.page_source)
         print(flag, username,RDPC,current_step,productType,productFormula,serialNum,IR,IRstep,IRnum)
 
     except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError):
         print('Read Timeout Error')
-        return (True, CFnum, 'Read Timeout Error', False, CFurl)
+        return (True, CFnum, 'Read Timeout Error', False)
 
     except NoSuchElementException as allError:
-        return (True, CFnum, allError, False, CFurl)
+        return (True, CFnum, allError, False)
 
 
     if not flag:
         browser.quit()
-        return (True, CFnum,'This is not a valid complaint folder number', False, CFurl)
+        return (True, CFnum,'This is not a valid complaint folder number', False)
 
         
     process_steps = {
@@ -244,40 +241,40 @@ def complaintProcess(CFnum, url):
     if current_step == '999':
         print('IR still open in step {}'.format(IRstep))
         browser.quit()
-        return (True, CFnum, 'Complaint folder already closed - step {}'.format(current_step), False, CFurl)
+        return (True, CFnum, 'Complaint folder already closed - step {}'.format(current_step), False)
 
     elif IR and IRstep != '999':
         print('IR still open in step {}'.format(IRstep))
         browser.quit()
-        return (True, CFnum, 'IR still open in step {}'.format(IRstep), False, CFurl)
+        return (True, CFnum, 'IR still open in step {}'.format(IRstep), False)
     elif len(username) == 0 or len(RDPC) == 0  or len(productFormula) == 0:
         print('Complaint folder not processable. Kindly check RDPC or product records.')
         browser.quit()
-        return (True, CFnum, 'Complaint folder not processable. Kindly check RDPC or product records.', False, CFurl)
+        return (True, CFnum, 'Complaint folder not processable. Kindly check RDPC or product records.', False)
     else:
         try:
             if not IR and (productType == 'Patient Interface') and (RDPC == 'Suction - lack prior to laser fire'):
                 if (serialNum[0] != '6'):
                     CFnum, statusMsg = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
                     browser.quit()
-                    return (True, CFnum, statusMsg, statusFlag, CFurl)
+                    return (True, CFnum, statusMsg, statusFlag)
                 else:
                     browser.quit()
-                    return (True, CFnum, 'Error! LOT number starts with 6 for PI return', False, CFurl)   
+                    return (True, CFnum, 'Error! LOT number starts with 6 for PI return', False)   
             
             elif not IR and (RDPC == 'Failure to Capture' or RDPC == 'Loss of Capture') and (productFormula == 'LOI' or productFormula == '0180-1201' or productFormula == '0180-1401') \
             or ((RDPC == 'Fluid Catchment Filled') and (productFormula == 'LOI')):
                 CFnum, statusMsg = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
                 browser.quit()
-                return (True, CFnum, statusMsg, statusFlag, CFurl) 
+                return (True, CFnum, statusMsg, statusFlag) 
             else:
                 CFnum, statusMsg = process_steps[current_step](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
                 browser.quit()
-                return (True, CFnum, statusMsg, False, CFurl)
+                return (True, CFnum, statusMsg, False)
         except KeyError:
             print('Error! The current step is {}'.format(current_step))
             browser.quit()
-            return (True, CFnum, 'Error! The current step is {}'.format(current_step), False, CFurl)
+            return (True, CFnum, 'Error! The current step is {}'.format(current_step), False)
 
         
 
