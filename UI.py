@@ -340,10 +340,10 @@ class PageOne(tk.Frame):
                 messagebox.showinfo('Error!', 'Complaint folder already in process')
                 return
             elif any(tag in self.treeview.item(CFnum)["tags"] for tag in ['Error', 'Closed']):
-                self.treeview.item(CFnum, values=(self.CFnum.get(),''), tags='Ongoing')
+                self.treeview.item(CFnum, values=(self.CFnum.get(),'Processing... Please wait'), tags='Ongoing')
 
         else:
-            self.treeview.insert('', 'end', self.CFnum.get(), text=str(self.count), values=(self.CFnum.get(),''), tags='Ongoing')
+            self.treeview.insert('', 'end', self.CFnum.get(), text=str(self.count), values=(self.CFnum.get(),'Processing... Please wait'), tags='Ongoing')
             print(CFnum, self.treeview.item(CFnum)["tags"])
 
         self.treeview.tag_configure('Ongoing', background='')
