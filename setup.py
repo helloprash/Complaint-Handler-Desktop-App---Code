@@ -12,7 +12,7 @@ os.environ['TK_LIBRARY'] = r'D:\Users\PB6\AppData\Local\Programs\Python\Python37
 syspath = r"D:\Users\PB6\AppData\Local\Programs\Python\Python37\DLLs"
 
 includes      = []
-include_files = [syspath + '/tcl86t.dll', syspath + '/tk86t.dll', 'jnjGIF.gif', 'chromedriver.exe', 'phantomjs.exe']
+include_files = [syspath + '/tcl86t.dll', syspath + '/tk86t.dll', 'jnjGIF.gif', 'Jnj48.ico', 'Jnj32.ico', 'chromedriver.exe', 'phantomjs.exe']
 
 if sys.platform == 'win32':
     base = "Win32GUI"
