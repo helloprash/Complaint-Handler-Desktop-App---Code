@@ -122,7 +122,7 @@ def getCFDetails(htmlSource):
 
 
 def Login(ID, password):
-    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs.exe").split('\\'))
+    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs\\bin\phantomjs.exe").split('\\'))
     batch_file = '\\\\'.join(os.path.join(current_folder,"kill.bat").split('\\'))
     print(ID, password)
     url = 'http://cwqa/CATSWebNET/'
@@ -135,8 +135,6 @@ def Login(ID, password):
             browser.set_page_load_timeout(100) 
             browser.get(url)
 
-            browser.save_screenshot('firstCheck.png')
-
             browser.find_element_by_xpath('//*[@id="CTRLemployeeid"]').send_keys(ID)
             browser.find_element_by_xpath('//*[@id="CTRLPasswordPrompt"]').send_keys(password)
             browser.find_element_by_xpath('//*[@id="TBLoginForm"]/tbody/tr[6]/td[2]/button').click()
@@ -146,8 +144,6 @@ def Login(ID, password):
                 current_url = browser.current_url
                 browser.quit()
                 return (returnMsg, current_url, sessionFlag)
-
-            browser.save_screenshot('secondCheck.png')
 
             return ('Please enter your login information:',browser.current_url, True)
               
@@ -212,7 +208,7 @@ def preview(CFnum, main_url):
 
 def complaintProcess(CFnum, url):
     print('inside complaintProcess', url)
-    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs.exe").split('\\'))
+    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs\\bin\phantomjs.exe").split('\\'))
     
     print(pjs_file)
     '''
