@@ -5,6 +5,8 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.common.exceptions import NoSuchElementException
 import urllib3
+from subprocess import Popen
+import time
 import steps
 
 
@@ -121,6 +123,7 @@ def getCFDetails(htmlSource):
 
 def Login(ID, password):
     pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs.exe").split('\\'))
+    batch_file = '\\\\'.join(os.path.join(current_folder,"kill.bat").split('\\'))
     print(ID, password)
     url = 'http://cwqa/CATSWebNET/'
     #url = 'http://cwqa/CATSWebNET/main.aspx?WCI=Main&WCE=ViewDashboard&WCU=s%3dSA8IA9EM9TG18C4I98HEXMXU46CTV2XO%7c*~r%3dComplaint%20Owner%20Home%20Page%7c*~q%3d1'
@@ -140,21 +143,31 @@ def Login(ID, password):
 
             sessionFlag, returnMsg = checkSession(browser.page_source)
             if not sessionFlag:
-                return (returnMsg, browser.current_url, sessionFlag)
+                current_url = browser.current_url
+                browser.quit()
+                return (returnMsg, current_url, sessionFlag)
 
             browser.save_screenshot('secondCheck.png')
 
             return ('Please enter your login information:',browser.current_url, True)
               
         except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError): 
-            print("Page load Timeout Occured. Quiting !!!")
             browser.quit()
+            print("Page load Timeout Occured. Quiting !!!")
             continue
             #return ('Page load Timeout Occured. Please try again',None, False)
 
-        except:
-            browser.quit()
+        except Exception as e:
+            print(e)
             continue
+            #return (e,None, False)
+        '''
+        finally:
+            #Popen(batch_file)
+            print('10 sleep')
+            time.sleep(10)
+        '''
+
     
     #return (url, True)
 
@@ -194,7 +207,6 @@ def preview(CFnum, main_url):
             #return sessionFlag, False, 'Read Timeout Error!'
 
         except:
-            browser.quit()
             continue
 
 
@@ -248,7 +260,6 @@ def complaintProcess(CFnum, url):
             return (True, CFnum, allError, False)
 
         except:
-            browser.quit()
             continue
 
 
