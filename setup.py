@@ -3,6 +3,7 @@ import sys
 import os
 import selenium
 
+
 base = None
 
 os.environ['TCL_LIBRARY'] = r'D:\Users\PB6\AppData\Local\Programs\Python\Python37\tcl\tcl8.6'
@@ -12,10 +13,12 @@ os.environ['TK_LIBRARY'] = r'D:\Users\PB6\AppData\Local\Programs\Python\Python37
 syspath = r"D:\Users\PB6\AppData\Local\Programs\Python\Python37\DLLs"
 
 includes      = []
-include_files = [syspath + '/tcl86t.dll', syspath + '/tk86t.dll', 'jnjGIF.gif', 'Jnj48.ico', 'Jnj32.ico', 'chromedriver.exe', 'phantomjs.exe']
+include_files = [syspath + '/tcl86t.dll', syspath + '/tk86t.dll', 'jnjGIF.gif', 'Jnj48.ico', 'Jnj32.ico', 'chromedriver.exe', 'phantomjs']
 
+'''
 if sys.platform == 'win32':
     base = "Win32GUI"
+'''
 
 executables = [cx_Freeze.Executable("UI.py", base=base, icon="Jnj32.ico")]
 
