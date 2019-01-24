@@ -477,9 +477,7 @@ class ThreadedClient:
                 s = socket.create_connection((host, 80), 2)
                 s.close()
                 return True
-            except : 
-                print('Socket Error')
-                pass
+            except : pass
         return False
 
     def catsWebconn(self):
