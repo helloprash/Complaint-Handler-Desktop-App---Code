@@ -122,7 +122,8 @@ def getCFDetails(htmlSource):
 
 
 def Login(ID, password):
-    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs\\bin\phantomjs.exe").split('\\'))
+    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs.exe").split('\\'))
+    print(pjs_file)
     batch_file = '\\\\'.join(os.path.join(current_folder,"kill.bat").split('\\'))
     print(ID, password)
     url = 'http://cwqa/CATSWebNET/'
@@ -208,7 +209,7 @@ def preview(CFnum, main_url):
 
 def complaintProcess(CFnum, url):
     print('inside complaintProcess', url)
-    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs\\bin\phantomjs.exe").split('\\'))
+    pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs.exe").split('\\'))
     
     print(pjs_file)
     '''
