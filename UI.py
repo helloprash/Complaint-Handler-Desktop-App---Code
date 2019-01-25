@@ -413,15 +413,6 @@ class ThreadedClient:
         (original) thread of the application, which will later be used by
         the GUI as well. We spawn a new thread for the worker (I/O).
         """
-        pjs_file = "\\".join(os.path.join(current_folder,'phantomjs\\bin').split('\\'))
-        print(os.environ['PATH'])
-        if 'phantomjs\\bin' not in os.environ['PATH']:
-            os.environ["PATH"] += os.pathsep + pjs_file
-
-        print('--------------------------------------------------------------------------------------------------------------\n')
-        print(os.environ['PATH'])
-
-
         self.running = 1
 
         # Create the queue
