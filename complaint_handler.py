@@ -62,6 +62,26 @@ def getCFDetails(htmlSource):
                 data = [each.find('font') for each in eachtd]
         medical_event = data[0].text.strip()
 
+        #pRE
+        pREflag = False
+        p_tag = soup.find(text='pREs').parent
+        font_tag = p_tag.parent
+        center_tag = font_tag.parent
+        next_center_tag = center_tag.findNext('center').findNext('center')
+        pREtables = next_center_tag.find('table',{'id':'TBGenericRecs0'})
+        pREtr = pREtables.find_all('tr')
+
+        for i in range(1, len(pREtr)):
+            pREtd = [eachtd for eachtd in pREtr[i].find_all('td')]
+            data = [item.text.strip() for item in pREtd]
+            for j in range(3,13):
+                if data[j] == 'Yes':
+                    pREflag = True
+        
+        print(pREflag)
+
+    
+
         #RDPC
         td = [tr.find_all('td', {'id':'TDStandardMemo013'}) for tr in tables[0].find_all('tr')]
         for eachtd in td:
@@ -115,10 +135,10 @@ def getCFDetails(htmlSource):
             IRstep = 'XX'
             IRnum = 'XXXX'
         
-        return(True,username,RDPC,medical_event,step,productType,productFormula,serialNum,IR,IRstep,IRnum)
+        return(True,username,RDPC,medical_event,pREflag,step,productType,productFormula,serialNum,IR,IRstep,IRnum)
     except Exception as err:
         print(err)
-        return(False,'username','RDPC','medical_event','step','productType','productFormula','serialNum','IR','IRstep','IRnum')
+        return(False,'username','RDPC','medical_event','pREflag','step','productType','productFormula','serialNum','IR','IRstep','IRnum')
 
 
 def Login(ID, password):
@@ -219,6 +239,7 @@ def complaintProcess(CFnum, url):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("disable-extensions")
     '''
+    
     while True:
         try:
             #browser = webdriver.Chrome(pjs_file, chrome_options=chrome_options)
@@ -241,9 +262,9 @@ def complaintProcess(CFnum, url):
                 browser.find_element_by_xpath('//*[@id="TDDisplayPart004"]/font/a/font').click()
 
             browser = actionSubmit(browser,CFnum)
-            
-            (flag, username,RDPC,medical_event,current_step,productType,productFormula,serialNum,IR,IRstep,IRnum) = getCFDetails(browser.page_source)
-            print(flag, username,RDPC,medical_event,current_step,productType,productFormula,serialNum,IR,IRstep,IRnum)
+
+            (flag, username,RDPC,medical_event,pREflag,current_step,productType,productFormula,serialNum,IR,IRstep,IRnum) = getCFDetails(browser.page_source)
+            print(flag, username,RDPC,medical_event,pREflag,current_step,productType,productFormula,serialNum,IR,IRstep,IRnum)
             break
 
         except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError):
@@ -274,6 +295,10 @@ def complaintProcess(CFnum, url):
         browser.quit()
         return (True, CFnum,'Medical event is Yes. Cannot process', False)
 
+    elif pREflag:
+        browser.quit()
+        return (True, CFnum,'pRE is YES. Cannot close', False)
+
     elif current_step == '999':
         print('IR still open in step {}'.format(IRstep))
         browser.quit()
@@ -291,7 +316,11 @@ def complaintProcess(CFnum, url):
         try:
             if not IR and (productType == 'Patient Interface') and (RDPC == 'Suction - lack prior to laser fire'):
                 if (serialNum[0] != '6'):
-                    CFnum, statusMsg = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
+                    if current_step == '140':
+                        CFnum, statusMsg, statusFlag = process_steps[current_step](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
+                    else:
+                        CFnum, statusMsg, statusFlag = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
+                    
                     browser.quit()
                     return (True, CFnum, statusMsg, statusFlag)
                 else:
@@ -300,11 +329,15 @@ def complaintProcess(CFnum, url):
             
             elif not IR and (RDPC == 'Failure to Capture' or RDPC == 'Loss of Capture') and (productFormula == 'LOI' or productFormula == '0180-1201' or productFormula == '0180-1401') \
             or ((RDPC == 'Fluid Catchment Filled') and (productFormula == 'LOI')):
-                CFnum, statusMsg = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
+                if current_step == '140':
+                    CFnum, statusMsg, statusFlag = process_steps[current_step](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
+                else:
+                    CFnum, statusMsg, statusFlag = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
+                
                 browser.quit()
                 return (True, CFnum, statusMsg, statusFlag) 
-            else:
-                CFnum, statusMsg = process_steps[current_step](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
+            else: 
+                CFnum, statusMsg, statusFlag = process_steps[current_step](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
                 browser.quit()
                 return (True, CFnum, statusMsg, False)
         except KeyError:
