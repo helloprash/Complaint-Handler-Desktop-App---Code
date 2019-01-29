@@ -28,7 +28,7 @@ def getpRE(htmlSource):
 
 def step90(browser,CFnum, RDPC = 'XXXX', productType = 'XXXX', productFormula = 'XXXX',serialNum='XXXX', username = 'XXXX',IR = False,IRnum = 'XXXX'):
     try:
-        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[4]/td/font/b/a[1]/font/b').click() #Edit
+        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[3]/td/font/b/a[1]/font/b').click() #Edit 
         try:
             selectMultiple(browser,'//*[@id="CTRLStandardText028"]', ['Investigation Required - Service Completed']) #Workflow Decision
         except NoSuchElementException:
@@ -46,7 +46,7 @@ def step140(browser,CFnum, RDPC = 'XXXX', productType = 'XXXX', productFormula =
     try:
         #Step 140
         pRE(browser,CFnum)
-        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[4]/td/font/b/a[1]/font/b').click() #Edit
+        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[3]/td/font/b/a[1]/font/b').click() #Edit
         
         summary = 'This complaint meets the criteria for no further investigation per Johnson &Johnson Vision Complaint Handling procedures. There is no indication of injury, and this event has been assessed as not being reportable. These types of complaints will continue to be monitored through tracking and trending.'
         Product_Deficiency_Identified = 'No'
@@ -124,12 +124,12 @@ def step140(browser,CFnum, RDPC = 'XXXX', productType = 'XXXX', productFormula =
 def step999(browser,CFnum, RDPC = 'XXXX', productType = 'XXXX', productFormula = 'XXXX',serialNum='XXXX', username = 'XXXX',IR = False,IRnum = 'XXXX'):
     try:
         pRE(browser,CFnum)
-        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[4]/td/font/b/a[1]/font/b').click() #Edit
+        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[3]/td/font/b/a[1]/font/b').click() #Edit
         selectMultiple(browser,'//*[@id="CTRLStandardText028"]', ['Close Complaint']) #Workflow Decision
         selectMultiple(browser,'//*[@id="CTRLStandardMemo015"]', ['']) #Next Action
         browser.find_element_by_xpath('//*[@id="CTRLStandardDate008"]').clear() #Next Action date
         browser.find_element_by_xpath('//*[@id="CTRLSUBMIT"]').click() #Submit
-        return CFnum, 'Closed'
+        return CFnum, 'Closed', True
     except Exception as e:
         return CFnum, e, False
     
@@ -138,10 +138,10 @@ def pRE(browser,CFnum):
     pREID = getpRE(browser.page_source)
     if pREID:
         actionSubmit(browser,pREID)
-        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[4]/td/font/b/a[1]/font/b').click() #Edit
+        browser.find_element_by_xpath('//*[@id="TBTopTable"]/tbody/tr[3]/td/font/b/a[1]/font/b').click() #Edit 
     
-        #Select all dropdown
-        xpathList = ['021','006','007','008','009','017','018','019','020']
+        #Select all dropdown ,'009','017','018','019','020'
+        xpathList = ['021','006','007','008']
         for eachXpath in xpathList:
             xpath = '//*[@id="CTRLStandardText{}"]'.format(eachXpath)
             selectMultiple(browser,xpath, ['No'])
