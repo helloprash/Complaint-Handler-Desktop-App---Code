@@ -1,3 +1,4 @@
+from pathlib import Path
 import os, inspect 
 import re
 import tkinter as tk
@@ -13,6 +14,7 @@ import complaint_handler
 from selenium import webdriver
 import urllib
 from urllib.request import urlopen
+from subprocess import Popen
 import socket
 import time
 
@@ -26,6 +28,7 @@ class ComplaintHandlerUI(tk.Tk):
         self.queue = queue
 
         self.geometry("400x460")
+        self.resizable(width=False, height=False)
         self.title("CATSWeb Automation Tool")
         self.iconbitmap('Jnj32.ico')
         self.configure(background="#FFFFFF")
@@ -164,7 +167,7 @@ class LoginPage(tk.Frame):
     def workerThread1(self, ID, password):
         while self.running:
             self.btn.config(state = 'disabled')
-            loginMsg, url, flag = complaint_handler.Login(ID, password)
+            loginMsg, url, flag, fileFlag = complaint_handler.Login(ID, password)
 
             if flag:
                 self.message.config(text='Please enter your login information:', font = ('Helvetica','11'), foreground="#638213", background="#FFFFFF")
@@ -174,12 +177,25 @@ class LoginPage(tk.Frame):
                 print('---------------------------------------------')
 
             else:
+                if not fileFlag:
+                    messagebox.showinfo('Error!','phantomjs.exe file not found')
+
                 self.message.config(text=loginMsg, font = ('Helvetica','11'), foreground="#E26C1B", background="#FFFFFF")
                 self.btn.config(state = 'normal')
                 self.UserEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
                 self.PassEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
                 print('Invalid login, please try again.')
                 print('----------------------------------------')
+
+
+            batch_file = '\\\\'.join(os.path.join(current_folder,"killPhantom.bat").split('\\'))
+
+            my_file = Path(batch_file)
+            if not my_file.is_file():
+                messagebox.showinfo('Error!','killPhantom.bat file not found')
+
+            else:
+                Popen(batch_file)
 
             self.UserEntry.config(state='normal')
             self.PassEntry.config(state='normal')
@@ -302,9 +318,12 @@ class PageOne(tk.Frame):
             return
 
     def workerThread2(self,CFnum, main_url):
-        sessionFlag, previewFlag, previewMsg = complaint_handler.preview(CFnum, main_url)
+        sessionFlag, previewFlag, previewMsg, fileFlag = complaint_handler.preview(CFnum, main_url)
 
-        if not sessionFlag:
+        if not fileFlag:
+            messagebox.showinfo('Error!','chromedriver.exe file not found')
+
+        elif not sessionFlag:
             messagebox.showinfo('Error!', 'Session Expired. Please login again')
             self.logout()
 
@@ -500,9 +519,13 @@ class ThreadedTask(threading.Thread):
         self.page_one = self.controller.get_page(PageOne)
 
     def run(self):
-        sessionFlag, CF_number, statusMsg, statusFlag = complaint_handler.complaintProcess(self.CFnum, self.main_url)
+        sessionFlag, CF_number, statusMsg, statusFlag, fileFlag = complaint_handler.complaintProcess(self.CFnum, self.main_url)
 
-        if not sessionFlag:
+        if not fileFlag:
+            messagebox.showinfo('Error!','phantomjs.exe file not found')
+            self.page_one.logout()
+
+        elif not sessionFlag:
             messagebox.showinfo('Error!', 'Session Expired. Please login again')
             self.page_one.logout()
 
