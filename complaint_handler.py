@@ -1,3 +1,4 @@
+from pathlib import Path
 import os,sys, inspect
 from bs4 import BeautifulSoup as BS
 from selenium import webdriver
@@ -144,6 +145,15 @@ def getCFDetails(htmlSource):
 def Login(ID, password):
     pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs.exe").split('\\'))
     print(pjs_file)
+
+    fileFlag = True
+    my_file = Path(pjs_file)
+    if not my_file.is_file():
+        fileFlag = False
+        print('fileError')
+        return ('phantomjs.exe file not found',None, False,fileFlag)
+
+
     batch_file = '\\\\'.join(os.path.join(current_folder,"kill.bat").split('\\'))
     print(ID, password)
     url = 'http://cwqa/CATSWebNET/'
@@ -164,9 +174,10 @@ def Login(ID, password):
             if not sessionFlag:
                 current_url = browser.current_url
                 browser.quit()
-                return (returnMsg, current_url, sessionFlag)
+                return (returnMsg, current_url, sessionFlag, fileFlag)
 
-            return ('Please enter your login information:',browser.current_url, True)
+            return ('Please enter your login information:',browser.current_url, True, fileFlag)
+
               
         except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError): 
             browser.quit()
@@ -191,6 +202,14 @@ def Login(ID, password):
 def preview(CFnum, main_url):
     print('Preview: ',preview)
     pjs_file = '\\\\'.join(os.path.join(current_folder,"chromedriver.exe").split('\\'))
+
+    fileFlag = True
+    my_file = Path(pjs_file)
+    if not my_file.is_file():
+        fileFlag = False
+        print('fileError')
+        return False, False, 'chromedriver.exe file not found', fileFlag
+
     chrome_options = Options()
     #chrome_options.add_argument("--headless")
     #chrome_options.add_argument("--window-size=1920x1080")
@@ -206,7 +225,7 @@ def preview(CFnum, main_url):
             sessionFlag, returnMsg = checkSession(browser.page_source)
             if not sessionFlag:
                 if returnMsg == 'Your CATSWeb V7 session does not exist.  Please enter your login information:':
-                    return sessionFlag, False, 'Your CATSWeb V7 session expired!'
+                    return sessionFlag, False, 'Your CATSWeb V7 session expired!', fileFlag
            
             print(browser.current_url)
 
@@ -215,11 +234,10 @@ def preview(CFnum, main_url):
                 browser.find_element_by_xpath('//*[@id="TDDisplayPart004"]/font/a/font').click() #Load Complaint Owner Home page
 
             browser = actionSubmit(browser,CFnum)
-            return sessionFlag,True, 'None'
+            return sessionFlag,True, 'None', fileFlag
 
         except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError):
             print('Read Timeout Error')
-            browser.quit()
             continue
             #return sessionFlag, False, 'Read Timeout Error!'
 
@@ -230,6 +248,13 @@ def preview(CFnum, main_url):
 def complaintProcess(CFnum, url):
     print('inside complaintProcess', url)
     pjs_file = '\\\\'.join(os.path.join(current_folder,"phantomjs.exe").split('\\'))
+
+    fileFlag = True
+    my_file = Path(pjs_file)
+    if not my_file.is_file():
+        fileFlag = False
+        print('fileError')
+        return False, CFnum, 'phantomjs.exe file not found', False, fileFlag
     
     print(pjs_file)
     '''
@@ -253,7 +278,7 @@ def complaintProcess(CFnum, url):
             sessionFlag, returnMsg = checkSession(browser.page_source)
             if not sessionFlag:
                 if returnMsg == 'Your CATSWeb V7 session does not exist.  Please enter your login information:':
-                    return False, CFnum, 'session expired!', False
+                    return False, CFnum, 'session expired!', False, fileFlag
            
             print(browser.current_url)
 
@@ -275,7 +300,7 @@ def complaintProcess(CFnum, url):
 
         except NoSuchElementException as allError:
             browser.quit()
-            return (True, CFnum, allError, False)
+            return (True, CFnum, allError, False, fileFlag)
 
         except:
             continue
@@ -289,29 +314,29 @@ def complaintProcess(CFnum, url):
 
     if not flag:
         browser.quit()
-        return (True, CFnum,'This is not a valid complaint folder number', False)
+        return (True, CFnum,'This is not a valid complaint folder number', False, fileFlag)
 
     elif medical_event == 'Yes':
         browser.quit()
-        return (True, CFnum,'Medical event is Yes. Cannot process', False)
+        return (True, CFnum,'Medical event is Yes. Cannot process', False, fileFlag)
 
     elif pREflag:
         browser.quit()
-        return (True, CFnum,'pRE is YES. Cannot close', False)
+        return (True, CFnum,'pRE is YES. Cannot close', False, fileFlag)
 
     elif current_step == '999':
         print('IR still open in step {}'.format(IRstep))
         browser.quit()
-        return (True, CFnum, 'Complaint folder already closed - step {}'.format(current_step), False)
+        return (True, CFnum, 'Complaint folder already closed - step {}'.format(current_step), False, fileFlag)
 
     elif IR and IRstep != '999':
         print('IR still open in step {}'.format(IRstep))
         browser.quit()
-        return (True, CFnum, 'IR still open in step {}'.format(IRstep), False)
+        return (True, CFnum, 'IR still open in step {}'.format(IRstep), False, fileFlag)
     elif len(username) == 0 or len(RDPC) == 0  or len(productFormula) == 0:
         print('Complaint folder not processable. Kindly check RDPC or product records.')
         browser.quit()
-        return (True, CFnum, 'Complaint folder not processable. Kindly check RDPC or product records.', False)
+        return (True, CFnum, 'Complaint folder not processable. Kindly check RDPC or product records.', False, fileFlag)
     else:
         try:
             if not IR and (productType == 'Patient Interface') and (RDPC == 'Suction - lack prior to laser fire'):
@@ -322,10 +347,10 @@ def complaintProcess(CFnum, url):
                         CFnum, statusMsg, statusFlag = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
                     
                     browser.quit()
-                    return (True, CFnum, statusMsg, statusFlag)
+                    return (True, CFnum, statusMsg, statusFlag, fileFlag)
                 else:
                     browser.quit()
-                    return (True, CFnum, 'Error! LOT number starts with 6 for PI return', False)   
+                    return (True, CFnum, 'Error! LOT number starts with 6 for PI return', False, fileFlag)   
             
             elif not IR and (RDPC == 'Failure to Capture' or RDPC == 'Loss of Capture') and (productFormula == 'LOI' or productFormula == '0180-1201' or productFormula == '0180-1401') \
             or ((RDPC == 'Fluid Catchment Filled') and (productFormula == 'LOI')):
@@ -335,15 +360,16 @@ def complaintProcess(CFnum, url):
                     CFnum, statusMsg, statusFlag = process_steps['090'](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
                 
                 browser.quit()
-                return (True, CFnum, statusMsg, statusFlag) 
-            else: 
+                return (True, CFnum, statusMsg, statusFlag, fileFlag) 
+            else:
+                print('Inside else part')
                 CFnum, statusMsg, statusFlag = process_steps[current_step](browser, CFnum, RDPC=RDPC, productType=productType, productFormula=productFormula, serialNum=serialNum, username=username,IR=IR,IRnum=IRnum)
                 browser.quit()
-                return (True, CFnum, statusMsg, False)
+                return (True, CFnum, statusMsg, False, fileFlag)
         except KeyError:
             print('Error! The current step is {}'.format(current_step))
             browser.quit()
-            return (True, CFnum, 'Error! The current step is {}'.format(current_step), False)
+            return (True, CFnum, 'Error! The current step is {}'.format(current_step), False, fileFlag)
 
         
 
