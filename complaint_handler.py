@@ -11,7 +11,7 @@ import time
 import steps
 
 
-current_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe() ))[0]))
+current_folder = os.getcwd()
 
 def checkCM(htmlSource):
     soup = BS(htmlSource, "lxml")
@@ -154,7 +154,6 @@ def Login(ID, password):
         return ('phantomjs.exe file not found',None, False,fileFlag)
 
 
-    batch_file = '\\\\'.join(os.path.join(current_folder,"kill.bat").split('\\'))
     print(ID, password)
     url = 'http://cwqa/CATSWebNET/'
     #url = 'http://cwqa/CATSWebNET/main.aspx?WCI=Main&WCE=ViewDashboard&WCU=s%3dSA8IA9EM9TG18C4I98HEXMXU46CTV2XO%7c*~r%3dComplaint%20Owner%20Home%20Page%7c*~q%3d1'
