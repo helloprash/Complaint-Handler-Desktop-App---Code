@@ -18,7 +18,7 @@ from subprocess import Popen
 import socket
 import time
 
-current_folder = os.path.realpath(os.path.abspath(os.path.split(inspect.getfile(inspect.currentframe() ))[0]))
+current_folder = os.getcwd()
 
 
 class ComplaintHandlerUI(tk.Tk):
@@ -350,6 +350,15 @@ class PageOne(tk.Frame):
         self.login_page.btn.config(state = 'normal')
         self.CFnum.delete(0, "end")
         self.tree.delete(*self.tree.get_children())
+        batch_file = '\\\\'.join(os.path.join(current_folder,"killPhantom.bat").split('\\'))
+
+        my_file = Path(batch_file)
+        if not my_file.is_file():
+            messagebox.showinfo('Error!','killPhantom.bat file not found')
+
+        else:
+            Popen(batch_file)
+
         self.controller.show_frame(LoginPage)
 
 
