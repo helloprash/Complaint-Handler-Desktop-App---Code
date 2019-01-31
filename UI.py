@@ -1,3 +1,4 @@
+import base64
 from pathlib import Path
 import os, inspect 
 import re
@@ -10,13 +11,14 @@ from tkinter import messagebox
 from tkinter import font
 import queue as Queue
 import threading
-import complaint_handler
 from selenium import webdriver
 import urllib
 from urllib.request import urlopen
 from subprocess import Popen
 import socket
 import time
+import complaint_handler
+import Images
 
 current_folder = os.getcwd()
 
@@ -30,7 +32,15 @@ class ComplaintHandlerUI(tk.Tk):
         self.geometry("400x460")
         self.resizable(width=False, height=False)
         self.title("CATSWeb Automation Tool")
-        self.iconbitmap('Jnj32.ico')
+
+        icondata= base64.b64decode(Images.Jnj32icon)
+        tempFile= "icon.ico"
+        iconfile= open(tempFile,"wb")
+        iconfile.write(icondata)
+        iconfile.close()
+        self.wm_iconbitmap(tempFile)
+        os.remove(tempFile)
+
         self.configure(background="#FFFFFF")
 
         container = Frame(self)
@@ -71,8 +81,10 @@ class LoginPage(tk.Frame):
         #style.configure("BW.TButton", font = ('Helvetica','10'), foreground="#64B23B", background="#FFFFFF")
         style.configure("BW.TEntry", background = "gray90")
 
-        imgFile = '\\\\'.join(os.path.join(current_folder,"jnj.gif").split('\\'))
-        img = tk.PhotoImage(file='jnjGIF.gif')      
+        #imgFile = '\\\\'.join(os.path.join(current_folder,"jnj.gif").split('\\'))
+
+
+        img = tk.PhotoImage(data=Images.jnjGIF)      
         self.logo = Label(self, image=img)
         self.logo.image = img
 
@@ -145,6 +157,7 @@ class LoginPage(tk.Frame):
 
 
     def clicked(self, ID, password):
+        self.controller.focus()
         if ID == 'Employee ID' or len(ID) == 0:
             messagebox.showinfo('Error!', 'Enter Employee ID')
             return
@@ -283,11 +296,11 @@ class PageOne(tk.Frame):
 
         self.CF_number.place(x='35', y='20')
         self.CFnum.place(x='157', y='20')
-        self.previewButton.place(x='300', y='20')
+        self.previewButton.place(x='300', y='17')
         #self.msg.place(x='18', y='40')
         self.button1.place(x='200', y='80', anchor='center')
         self.tree.place(x='0', y='140')
-        self.delButton.place(x='4', y='382')
+        self.delButton.place(x='4', y='385')
         self.button2.place(x='315', y='385')
         #self.internet.place(x='270', y='420')
         self.authorName.place(x='87', y='442')
