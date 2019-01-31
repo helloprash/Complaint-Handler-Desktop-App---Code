@@ -13,14 +13,14 @@ os.environ['TK_LIBRARY'] = r'D:\Users\PB6\AppData\Local\Programs\Python\Python37
 syspath = r"D:\Users\PB6\AppData\Local\Programs\Python\Python37\DLLs"
 
 includes      = []
-include_files = [syspath + '/tcl86t.dll', syspath + '/tk86t.dll', 'jnjGIF.gif', 'Jnj48.ico', 'Jnj32.ico', 'chromedriver.exe', 'phantomjs.exe', 'killPhantom.bat']
+include_files = [syspath + '/tcl86t.dll', syspath + '/tk86t.dll', 'Jnj48.ico', 'chromedriver.exe', 'phantomjs.exe', 'killPhantom.bat']
 
 '''
 if sys.platform == 'win32':
     base = "Win32GUI"
 '''
 
-executables = [cx_Freeze.Executable("UI.py", base=base, icon="Jnj32.ico")]
+executables = [cx_Freeze.Executable("UI.py", base=base, icon="Jnj48.ico")]
 
 cx_Freeze.setup(
     name = "CatsWeb Complaint Handler",
