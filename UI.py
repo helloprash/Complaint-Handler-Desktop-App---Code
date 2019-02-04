@@ -118,6 +118,7 @@ class LoginPage(tk.Frame):
         helv36 = font.Font(family='Helvetica', size=11)
         self.btn = tk.Button(self, text="Login", command=lambda: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
         self.btn.config(relief='flat', bg='#737370', fg="#FFFFFF", height=2, width=33)
+        self.btn.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
         self.btn['font'] = helv36
 
         self.internet = Label(self, text="Checking...")
@@ -187,7 +188,7 @@ class PageOne(tk.Frame):
         self.CF_number.config(font = ('Helvetica','10','bold'), foreground="#112D25", background="#FFFFFF")
 
         self.CFnum = Entry(self, validate="key", validatecommand=(self.register(self.validate), '%P'))
-        #self.CFnum = Entry(self)
+        self.CFnum.bind('<Return>', lambda x: self.submit(self.CFnum.get(), self.main_url))
 
         self.msg = Label(self, style="BW.TLabel")
         
@@ -199,6 +200,9 @@ class PageOne(tk.Frame):
         self.button1 = tk.Button(self, text="Submit", command=lambda : self.submit(self.CFnum.get(), self.main_url))
         self.button1.config(relief='flat', bg='#737370', fg="#FFFFFF", height=2, width=38)
         self.button1['font'] = helv36
+        self.button1.config(state = 'disabled')
+        self.button1.bind('<Return>', lambda x: self.submit(self.CFnum.get(), self.main_url))
+
 
         self.button2 = tk.Button(self, text="Logout", command=lambda: self.logout())
         self.button2.config(relief='flat', bg='#737370', fg="#FFFFFF", height=1, width=10)
@@ -303,6 +307,7 @@ class PageOne(tk.Frame):
         self.login_page.UserEntry.bind('<Return>', lambda x: self.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
         self.login_page.PassEntry.bind('<Return>', lambda x: self.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
         self.login_page.btn.config(state = 'normal')
+        self.button1.config(state = 'disabled')
         self.CFnum.delete(0, "end")
         self.tree.delete(*self.tree.get_children())
         batch_file = '\\\\'.join(os.path.join(current_folder,"killPhantom.bat").split('\\'))
@@ -495,6 +500,7 @@ class ThreadedClient:
                 self.login_page.message.config(text='Please enter your login information:', font = ('Helvetica','11'), foreground="#638213", background="#FFFFFF")
                 self.login_page.queue.put(url)
                 self.page_one.CFnum.focus()
+                self.page_one.button1.config(state = 'normal')
                 self.login_page.controller.show_frame(PageOne)
                 print("Logged in!")
                 print('---------------------------------------------')
@@ -505,6 +511,7 @@ class ThreadedClient:
 
                 self.login_page.message.config(text=loginMsg, font = ('Helvetica','11'), foreground="#E26C1B", background="#FFFFFF")
                 self.login_page.btn.config(state = 'normal')
+                self.page_one.button1.config(state = 'disabled')
                 self.login_page.UserEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
                 self.login_page.PassEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
                 print('Invalid login, please try again.')
