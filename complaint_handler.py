@@ -157,7 +157,7 @@ def Login(ID, password):
     print(ID, password)
     url = 'http://cwqa/CATSWebNET/'
     #url = 'http://cwqa/CATSWebNET/main.aspx?WCI=Main&WCE=ViewDashboard&WCU=s%3dSA8IA9EM9TG18C4I98HEXMXU46CTV2XO%7c*~r%3dComplaint%20Owner%20Home%20Page%7c*~q%3d1'
-    
+
     while True:
         try :
             browser = webdriver.PhantomJS(executable_path = pjs_file, desired_capabilities={'phantomjs.page.settings.resourceTimeout': '5000'})
@@ -201,6 +201,9 @@ def Login(ID, password):
 def preview(CFnum, main_url):
     print('Preview: ',preview)
     pjs_file = '\\\\'.join(os.path.join(current_folder,"chromedriver.exe").split('\\'))
+    batch_file = '\\\\'.join(os.path.join(current_folder,"killChrome.bat").split('\\'))
+
+    my_file = Path(batch_file)
 
     fileFlag = True
     my_file = Path(pjs_file)
@@ -214,11 +217,13 @@ def preview(CFnum, main_url):
     #chrome_options.add_argument("--window-size=1920x1080")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("disable-extensions")
+    browser = webdriver.Chrome(pjs_file, chrome_options=chrome_options)
+    browser.implicitly_wait(3)
+    browser.set_page_load_timeout(100)
+    #main_url = 'http://cwqa/CATSWebNET/main.aspx?WCI=Main&WCE=ViewDashboard&WCU=s%3dU3ABTU2E6N0KP5NMIJHLMQD87GJ7QCIG%7c*~r%3dComplaint%20Owner%20Home%20Page%7c*~q%3d1%7c*~g%3d0'
+    
     while True:
         try:
-            browser = webdriver.Chrome(pjs_file, chrome_options=chrome_options)
-            browser.implicitly_wait(3)
-            browser.set_page_load_timeout(100)
             browser.get(main_url)
 
             sessionFlag, returnMsg = checkSession(browser.page_source)
@@ -235,12 +240,14 @@ def preview(CFnum, main_url):
             browser = actionSubmit(browser,CFnum)
             return sessionFlag,True, 'None', fileFlag
 
-        except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError):
+        except (urllib3.exceptions.TimeoutError, urllib3.exceptions.ReadTimeoutError) as err1:
             print('Read Timeout Error')
+            print('Err1', err1)
             continue
             #return sessionFlag, False, 'Read Timeout Error!'
 
-        except:
+        except Exception as err2:
+            print('Err2 ',err2)
             continue
 
 
@@ -263,14 +270,15 @@ def complaintProcess(CFnum, url):
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("disable-extensions")
     '''
+    #browser = webdriver.Chrome(pjs_file, chrome_options=chrome_options)
+            
+    browser = webdriver.PhantomJS(executable_path = pjs_file, desired_capabilities={'phantomjs.page.settings.resourceTimeout': '5000'})
+    browser.implicitly_wait(3)
+    browser.set_page_load_timeout(100)
+
     
     while True:
         try:
-            #browser = webdriver.Chrome(pjs_file, chrome_options=chrome_options)
-            
-            browser = webdriver.PhantomJS(executable_path = pjs_file, desired_capabilities={'phantomjs.page.settings.resourceTimeout': '5000'})
-            browser.implicitly_wait(3)
-            browser.set_page_load_timeout(100)
 
             browser.get(url)
 
