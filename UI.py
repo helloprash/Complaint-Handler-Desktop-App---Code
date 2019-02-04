@@ -16,7 +16,6 @@ import urllib
 from urllib.request import urlopen
 from subprocess import Popen
 import socket
-import time
 import complaint_handler
 import Images
 
@@ -24,7 +23,7 @@ current_folder = os.getcwd()
 
 
 class ComplaintHandlerUI(tk.Tk):
-    def __init__(self, queue, *args, **kwargs):
+    def __init__(self, queue, clicked, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
 
         self.queue = queue
@@ -52,7 +51,7 @@ class ComplaintHandlerUI(tk.Tk):
         self.frames = {}
 
         for F in (LoginPage, PageOne):
-            frame = F(container, self)
+            frame = F(container, self, clicked)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
             frame.configure(background="#FFFFFF")
@@ -68,13 +67,15 @@ class ComplaintHandlerUI(tk.Tk):
 
 
 class LoginPage(tk.Frame):
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, clicked):
         tk.Frame.__init__(self, parent)
 
         self.running = 1
         self.queue = controller.queue
         self.flagQueue = Queue.Queue()
         self.controller = controller
+        self.clicked = clicked
+
 
         style = Style()
         #style.configure("BW.TLabel", font = ('Helvetica','10'),foreground="#64B23B")
@@ -156,78 +157,15 @@ class LoginPage(tk.Frame):
             self.PassEntry.config(show="",foreground = 'grey')
 
 
-    def clicked(self, ID, password):
-        self.controller.focus()
-        if ID == 'Employee ID' or len(ID) == 0:
-            messagebox.showinfo('Error!', 'Enter Employee ID')
-            return
-        if password == 'Password' or len(password) == 0:
-            messagebox.showinfo('Error!', 'Enter Password')
-            return
-        
-        self.running = 1
-        self.message.config(text='')
-        self.UserEntry.unbind('<Return>')
-        self.PassEntry.unbind('<Return>')
-        self.UserEntry.config(state='disabled')
-        self.PassEntry.config(state='disabled')
-        self.loginStatusMsg.config(text='Logging in... Please wait')
-        self.thread1 = threading.Thread(target=self.workerThread1, args=(ID, password))
-        self.thread1.daemon = True #This line tells the thread to quit if the GUI (master thread) quits
-        self.thread1.start()
-
-
-    def workerThread1(self, ID, password):
-        while self.running:
-            self.btn.config(state = 'disabled')
-            loginMsg, url, flag, fileFlag = complaint_handler.Login(ID, password)
-
-            if flag:
-                self.message.config(text='Please enter your login information:', font = ('Helvetica','11'), foreground="#638213", background="#FFFFFF")
-                self.queue.put(url)
-                self.controller.show_frame(PageOne)
-                print("Logged in!")
-                print('---------------------------------------------')
-
-            else:
-                if not fileFlag:
-                    messagebox.showinfo('Error!','phantomjs.exe file not found')
-
-                self.message.config(text=loginMsg, font = ('Helvetica','11'), foreground="#E26C1B", background="#FFFFFF")
-                self.btn.config(state = 'normal')
-                self.UserEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
-                self.PassEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
-                print('Invalid login, please try again.')
-                print('----------------------------------------')
-
-
-            batch_file = '\\\\'.join(os.path.join(current_folder,"killPhantom.bat").split('\\'))
-
-            my_file = Path(batch_file)
-            if not my_file.is_file():
-                messagebox.showinfo('Error!','killPhantom.bat file not found')
-
-            else:
-                Popen(batch_file)
-
-            self.UserEntry.config(state='normal')
-            self.PassEntry.config(state='normal')
-            self.PassEntry.delete(0, 'end')
-            self.PassEntry.insert(0, 'Password')
-            self.PassEntry.config(show="",foreground = 'grey')
-            self.running = 0
-            self.loginStatusMsg.config(text='')
-
 
     
 class PageOne(tk.Frame):
 
-    def __init__(self, parent, controller):
+    def __init__(self, parent, controller, clicked):
         tk.Frame.__init__(self, parent)
 
         self.count = 0
         self.running = 1
-        self.t1 = time.time()
         self.main_url = ''
         self.treeSelection = ''
         self.queue = controller.queue
@@ -235,6 +173,7 @@ class PageOne(tk.Frame):
         self.CFnumQueue = Queue.Queue()
         self.flagQueue = Queue.Queue()
         self.controller = controller
+        self.clicked = clicked
         
         self.login_page = self.controller.get_page(LoginPage)
 
@@ -305,6 +244,9 @@ class PageOne(tk.Frame):
         #self.internet.place(x='270', y='420')
         self.authorName.place(x='87', y='442')
         self.vsb.place(x='380', y='140', height=228)
+
+        self.CFnum.focus()
+
         '''
         self.signal = tk.Canvas(self,width=15, height=15)
         self.signal.place(x='720', y='270')
@@ -358,8 +300,8 @@ class PageOne(tk.Frame):
     
 
     def logout(self):
-        self.login_page.UserEntry.bind('<Return>', lambda x: self.login_page.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
-        self.login_page.PassEntry.bind('<Return>', lambda x: self.login_page.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
+        self.login_page.UserEntry.bind('<Return>', lambda x: self.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
+        self.login_page.PassEntry.bind('<Return>', lambda x: self.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
         self.login_page.btn.config(state = 'normal')
         self.CFnum.delete(0, "end")
         self.tree.delete(*self.tree.get_children())
@@ -380,8 +322,6 @@ class PageOne(tk.Frame):
             messagebox.showinfo('Error!', 'Enter a complaint folder number')
             return
         self.running = 1
-        self.t1 = time.time()
-        print('time: ',time.time() - self.t1)
         # Increment counter
         self.count = len(self.treeview.get_children()) + 1
         
@@ -460,7 +400,7 @@ class ThreadedClient:
         self.queue = Queue.Queue( )
 
         # Set up the GUI part
-        self.gui = ComplaintHandlerUI(self.queue)
+        self.gui = ComplaintHandlerUI(self.queue, self.clicked)
 
         self.login_page = self.gui.get_page(LoginPage)
         self.page_one = self.gui.get_page(PageOne)
@@ -479,7 +419,7 @@ class ThreadedClient:
         if(self.internet_on()):
             self.login_page.internet.config(text='Internet Connected')
             self.page_one.internet.config(text='Internet Connected')
-            self.login_page.btn.config(command=lambda: self.login_page.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
+            self.login_page.btn.config(command=lambda: self.clicked(self.login_page.UserEntry.get(), self.login_page.PassEntry.get()))
             self.page_one.button1.config(command=lambda: self.page_one.submit(self.page_one.CFnum.get(), self.page_one.main_url))
 
             '''
@@ -525,6 +465,68 @@ class ThreadedClient:
             return (urlopen("http://cwprod/CATSWebNET/").getcode())
         except:
             return False
+
+    def clicked(self, ID, password):
+        if ID == 'Employee ID' or len(ID) == 0:
+            messagebox.showinfo('Error!', 'Enter Employee ID')
+            return
+        if password == 'Password' or len(password) == 0:
+            messagebox.showinfo('Error!', 'Enter Password')
+            return
+        
+        self.running = 1
+        self.login_page.message.config(text='')
+        self.login_page.UserEntry.unbind('<Return>')
+        self.login_page.PassEntry.unbind('<Return>')
+        self.login_page.UserEntry.config(state='disabled')
+        self.login_page.PassEntry.config(state='disabled')
+        self.login_page.loginStatusMsg.config(text='Logging in... Please wait')
+        self.thread1 = threading.Thread(target=self.workerThread1, args=(ID, password))
+        self.thread1.daemon = True #This line tells the thread to quit if the GUI (master thread) quits
+        self.thread1.start()
+
+
+    def workerThread1(self, ID, password):
+        while self.running:
+            self.login_page.btn.config(state = 'disabled')
+            loginMsg, url, flag, fileFlag = complaint_handler.Login(ID, password)
+
+            if flag:
+                self.login_page.message.config(text='Please enter your login information:', font = ('Helvetica','11'), foreground="#638213", background="#FFFFFF")
+                self.login_page.queue.put(url)
+                self.page_one.CFnum.focus()
+                self.login_page.controller.show_frame(PageOne)
+                print("Logged in!")
+                print('---------------------------------------------')
+
+            else:
+                if not fileFlag:
+                    messagebox.showinfo('Error!','phantomjs.exe file not found')
+
+                self.login_page.message.config(text=loginMsg, font = ('Helvetica','11'), foreground="#E26C1B", background="#FFFFFF")
+                self.login_page.btn.config(state = 'normal')
+                self.login_page.UserEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
+                self.login_page.PassEntry.bind('<Return>', lambda x: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
+                print('Invalid login, please try again.')
+                print('----------------------------------------')
+
+
+            batch_file = '\\\\'.join(os.path.join(current_folder,"killPhantom.bat").split('\\'))
+
+            my_file = Path(batch_file)
+            if not my_file.is_file():
+                messagebox.showinfo('Error!','killPhantom.bat file not found')
+
+            else:
+                Popen(batch_file)
+
+            self.login_page.UserEntry.config(state='normal')
+            self.login_page.PassEntry.config(state='normal')
+            self.login_page.PassEntry.delete(0, 'end')
+            self.login_page.PassEntry.insert(0, 'Password')
+            self.login_page.PassEntry.config(show="",foreground = 'grey')
+            self.running = 0
+            self.login_page.loginStatusMsg.config(text='')
     
 
 class ThreadedTask(threading.Thread):
