@@ -115,6 +115,7 @@ class LoginPage(tk.Frame):
         self.catsWebLabel = Label(self, text='CATSWeb',style='BW.TLabel')
         self.catsWebLabel.place(x='390', y='220')
         '''
+        
         helv36 = font.Font(family='Helvetica', size=11)
         self.btn = tk.Button(self, text="Login", command=lambda: self.clicked(self.UserEntry.get(), self.PassEntry.get()))
         self.btn.config(relief='flat', bg='#737370', fg="#FFFFFF", height=2, width=33)

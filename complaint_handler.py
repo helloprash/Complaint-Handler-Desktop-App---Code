@@ -156,7 +156,18 @@ def Login(ID, password):
 
     print(ID, password)
     url = 'http://cwqa/CATSWebNET/'
-    #url = 'http://cwqa/CATSWebNET/main.aspx?WCI=Main&WCE=ViewDashboard&WCU=s%3dSA8IA9EM9TG18C4I98HEXMXU46CTV2XO%7c*~r%3dComplaint%20Owner%20Home%20Page%7c*~q%3d1'
+
+    headers = { 'Accept':'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language':'zh-CN,zh;q=0.8,en-US;q=0.5,en;q=0.3',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64; rv:47.0) Gecko/20100101 Firefox/47.0',
+        'Connection': 'keep-alive'
+    }
+
+    for key, value in headers.items():
+        webdriver.DesiredCapabilities.PHANTOMJS['phantomjs.page.customHeaders.{}'.format(key)] = value
+
+    webdriver.DesiredCapabilities.PHANTOMJS['phantomjs.page.settings.userAgent'] = 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
+ 
 
     while True:
         try :
@@ -175,6 +186,9 @@ def Login(ID, password):
                 browser.quit()
                 return (returnMsg, current_url, sessionFlag, fileFlag)
 
+            print(browser.current_url)
+            agent = browser.execute_script("return navigator.userAgent")
+            print(agent)
             return ('Please enter your login information:',browser.current_url, True, fileFlag)
 
               
@@ -307,6 +321,7 @@ def complaintProcess(CFnum, url):
 
         except NoSuchElementException as allError:
             browser.quit()
+            print(allError)
             return (True, CFnum, allError, False, fileFlag)
 
         except:
